@@ -1,0 +1,92 @@
+/* 로그인 폼 스타일 */
+#login-form {
+  position: absolute;
+  top: 60px;
+  right: 0;
+  width: 200px;
+  background-color: #f1f1f1;
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+
+
+#login-form.hidden {
+  display: none;
+}
+
+
+#login-form form input[type="text"],
+#login-form form input[type="password"] {
+  display: block;
+  margin-bottom: 10px;
+  padding: 5px;
+  width: 100%;
+}
+
+
+#login-form form button {
+  padding: 5px 10px;
+  width: 100%;
+}
+
+
+#user-info {
+  display: flex;
+  align-items: center;
+}
+
+
+#user-info.hidden {
+  display: none;
+}
+
+
+#username {
+  margin-right: 10px;
+}
+
+
+/* 나머지 스타일 */
+/* ... */
+
+
+/* 검은 줄 스타일 */
+#top-bar {
+  background-color: black;
+  padding: 10px;
+  position: relative;
+}
+
+
+#top-bar-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+}
+
+
+#page-title {
+  font-weight: bold;
+  font-size: 24px;
+  margin-right: 20px;
+}
+
+
+#logout-button {
+  background-color: black;
+  color: white;
+  border: none;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+
+#login-button {
+  background-color: black;
+  color: white;
+  border: none;
+  cursor: pointer;
+  padding: 10px 20px;
+  margin-left: 10px;
+}

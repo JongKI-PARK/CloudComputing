@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Web Page Title</title>
+    <link rel="stylesheet" type="text/css" href="../static/main.css">
+    <style>
+        /* CSS 스타일 지정 */
+    </style>
+</head>
+<body>
+    <header>
+        <!-- 로그인 영역 -->
+        <div id="top-bar">
+            <div id="top-bar-content">
+                <span id="page-title">수강신청</span>
+                <div id="user-info" class="hidden">
+                    <span id="username"></span>
+                    <button id="logout-button">Sign out</button>
+                </div>
+                <button id="login-button" type="button">Sign in</button>
+                <div id="login-form" class="hidden">
+                    <form id="login-form">
+                        <input type="text" id="userid-input" placeholder="아이디">
+                        <input type="password" id="password-input" placeholder="비밀번호">
+                        <button type="submit">Sign in</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- 학생 정보 영역 -->
+        <div id="student-info">
+            <!-- 학생 정보 표시 -->
+        </div>
+    </header>
+    <section>
+        <!-- 과목 정보 영역 -->
+        <div id="subject-info">
+            <!-- 검색창 -->
+            <div id="search-bar" class="hidden">
+                <input type="text" id="search-input" placeholder="과목 이름 입력">
+                <button id="search-button">검색</button>
+            </div>
+            <!-- 과목 정보 표시 -->
+            <ul id="subject-list">
+                <!-- 과목 목록을 동적으로 추가할 공간 -->
+            </ul>
+        </div>
+        <button id="subject-btn">과목 정보 조회</button>
+    </section>
+    <section>
+        <!-- 수강 계획 도우미 영역 -->
+        <div id="plan-helper">
+            <!-- 수강희망 과목 리스트 표시 -->
+            <!-- 과목 추가 버튼 -->
+        </div>
+    </section>
+    <section>
+        <!-- 수강신청 주문 및 완료 영역 -->
+        <div id="registration">
+            <!-- 수강신청 가능 여부 확인 -->
+            <!-- 수강신청 버튼 -->
+            <!-- 수강신청 완료된 과목 목록 표시 -->
+        </div>
+    </section>
+    <footer>
+        <!-- 하단 영역 -->
+    </footer>
+    <script src="../static/main.js"></script>
+    <script>
+        // JavaScript 코드
+        document.addEventListener("DOMContentLoaded", function() {
+            function getIDFromURL() {
+                var path = window.location.pathname;
+                var parts = path.split("/");
+                if (parts.length > 2) {
+                    return parts[2];
+                }
+                return null;
+                }
+
+            // 경로 파라미터(ID) 값 가져오기
+            var id = getIDFromURL();
+            if (id) {
+                alert("ID: " + id);
+                // 여기에서 id 변수를 사용하여 원하는 작업 수행
+            }
+
+            var searchButton = document.getElementById("search-button");
+            var searchInput = document.getElementById("search-input");
+            var subjectList = document.getElementById("subject-list");
+
+
+            searchButton.addEventListener("click", function() {
+                var subjectName = searchInput.value;
+                searchSubjects(subjectName);
+            });
+
+
+            function searchSubjects(subjectName) {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', 'http://localhost:8082/subjects?name=' + subjectName, true);
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        var subjects = JSON.parse(xhr.responseText);
+                        displaySubjects(subjects);
+                    } else {
+                        console.error(xhr.statusText);
+                    }
+                };
+                xhr.onerror = function() {
+                    console.error(xhr.statusText);
+                };
+                xhr.send(null);
+            }
+
+
+            function displaySubjects(subjects) {
+                var subjectList = document.getElementById('subject-list');
+                subjectList.innerHTML = '';
+
+
+                if (subjects.length === 0) {
+                    var listItem = document.createElement('li');
+                    listItem.textContent = '검색 결과가 없습니다.';
+                    subjectList.appendChild(listItem);
+                    return;
+                }
+
+
+                var table = document.createElement('table');
+                table.className = 'subject-table'; // Add a class for styling purposes
+                table.style.borderCollapse = 'collapse'; // Collapse borders
+
+
+                // Create table header row
+                var tableHeader = document.createElement('thead');
+                var headerRow = document.createElement('tr');
+                var headers = ['과목 ID', '과목명', '교수', '학점', '개설학과', '수강제한인원'];
+
+
+                headers.forEach(function(headerText) {
+                    var headerCell = document.createElement('th');
+                    headerCell.textContent = headerText;
+                    headerCell.style.border = '2px solid black'; // Add border to header cell
+                    headerCell.style.padding = '8px'; // Add padding to the header cell
+                    headerCell.style.textAlign = 'center'; // Center-align the header cell content
+                    headerRow.appendChild(headerCell);
+                });
+
+                tableHeader.appendChild(headerRow);
+                table.appendChild(tableHeader);
+
+
+                // Create table body rows
+                var tableBody = document.createElement('tbody');
+
+                subjects.forEach(function(subject) {
+                    var row = document.createElement('tr');
+
+                    var rowData = [
+                        subject.subject_id,
+                        subject.subject_name,
+                        subject.professor,
+                        subject.credits,
+                        subject.department,
+                        subject.enrollment_limit
+                    ];
+
+                    rowData.forEach(function(text) {
+                        var cell = document.createElement('td');
+                        cell.textContent = text;
+                        cell.style.border = '1px solid black'; // Add border to cell
+                        cell.style.padding = '6px'; // Add padding to the cell
+                        cell.style.textAlign = 'center'; // Center-align the cell content
+                        row.appendChild(cell);
+                    });
+
+
+                    tableBody.appendChild(row);
+                });
+
+
+                table.appendChild(tableBody);
+                subjectList.appendChild(table);
+            }
+        });
+    </script>
+</body>
+</html>
+
+
