@@ -1,9 +1,9 @@
 spring:
   datasource:
-    url: jdbc:mysql://mysql-container:3306/order_process?createDatabaseIfNotExist=true
+    url: jdbc:mysql://localhost:3306/order_process?createDatabaseIfNotExist=true
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
-    password: 1234
+    password: sys123457!
 
   jpa:
     hibernate:
