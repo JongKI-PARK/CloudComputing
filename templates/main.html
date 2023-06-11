@@ -15,6 +15,7 @@
                 <span id="page-title">수강신청</span>
                 <div id="user-info" class="hidden">
                     <span id="username"></span>
+                    <span id="userID"></span>
                     <button id="logout-button">Sign out</button>
                 </div>
                 <button id="login-button" type="button">Sign in</button>
@@ -50,16 +51,27 @@
     <section>
         <!-- 수강 계획 도우미 영역 -->
         <div id="plan-helper">
-            <!-- 수강희망 과목 리스트 표시 -->
+            <!-- 도우미 버튼 -->
+         
+
+         <!-- 수강 희망 과목 표시 테이블 -->
+          <div id="plan"></div>
+          <input type="text" id="subject-id-input" placeholder="과목 번호 입력">
+          <button id="add-subject-button">과목 추가</button><br>
+          <button id="helper-button">도우미</button>
+          <div id="plan-table"></div>
             <!-- 과목 추가 버튼 -->
+            
         </div>
     </section>
     <section>
         <!-- 수강신청 주문 및 완료 영역 -->
-        <div id="registration">
+        <div id="order-section">
             <!-- 수강신청 가능 여부 확인 -->
             <!-- 수강신청 버튼 -->
+            <button id="order-button">수강신청 확인</button>
             <!-- 수강신청 완료된 과목 목록 표시 -->
+            <ul id="order-table"></ul>
         </div>
     </section>
     <footer>
@@ -78,6 +90,7 @@
                 return null;
                 }
 
+
             // 경로 파라미터(ID) 값 가져오기
             var id = getIDFromURL();
             if (id) {
@@ -85,15 +98,20 @@
                 // 여기에서 id 변수를 사용하여 원하는 작업 수행
             }
 
+
             var searchButton = document.getElementById("search-button");
             var searchInput = document.getElementById("search-input");
             var subjectList = document.getElementById("subject-list");
+
+
 
 
             searchButton.addEventListener("click", function() {
                 var subjectName = searchInput.value;
                 searchSubjects(subjectName);
             });
+
+
 
 
             function searchSubjects(subjectName) {
@@ -113,10 +131,16 @@
                 xhr.send(null);
             }
 
+            
+
+        
+
 
             function displaySubjects(subjects) {
                 var subjectList = document.getElementById('subject-list');
                 subjectList.innerHTML = '';
+
+
 
 
                 if (subjects.length === 0) {
@@ -127,15 +151,21 @@
                 }
 
 
+
+
                 var table = document.createElement('table');
                 table.className = 'subject-table'; // Add a class for styling purposes
                 table.style.borderCollapse = 'collapse'; // Collapse borders
+
+
 
 
                 // Create table header row
                 var tableHeader = document.createElement('thead');
                 var headerRow = document.createElement('tr');
                 var headers = ['과목 ID', '과목명', '교수', '학점', '개설학과', '수강제한인원'];
+
+
 
 
                 headers.forEach(function(headerText) {
@@ -147,15 +177,20 @@
                     headerRow.appendChild(headerCell);
                 });
 
+
                 tableHeader.appendChild(headerRow);
                 table.appendChild(tableHeader);
+
+
 
 
                 // Create table body rows
                 var tableBody = document.createElement('tbody');
 
+
                 subjects.forEach(function(subject) {
                     var row = document.createElement('tr');
+
 
                     var rowData = [
                         subject.subject_id,
@@ -165,6 +200,7 @@
                         subject.department,
                         subject.enrollment_limit
                     ];
+
 
                     rowData.forEach(function(text) {
                         var cell = document.createElement('td');
@@ -176,16 +212,211 @@
                     });
 
 
+
+
                     tableBody.appendChild(row);
                 });
+
+
 
 
                 table.appendChild(tableBody);
                 subjectList.appendChild(table);
             }
-        });
+                               // 도우미 버튼 클릭 이벤트 핸들러 함수
+
+            function showEnrollmentPlans(id) {
+            // 서버에 수강 희망 과목 정보 요청
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', 'http://localhost:8084/planner/' + id, true);
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        var enrollmentPlans = JSON.parse(xhr.responseText).enrollmentPlans;
+                        displayEnrollmentPlans(enrollmentPlans);
+                    } else {
+                        console.error(xhr.statusText);
+                    }
+                };
+
+                xhr.onerror = function() {
+                    console.error(xhr.statusText);
+                };
+                xhr.send();
+            }
+
+// 도우미 버튼 클릭 이벤트 리스너 등록
+var helperButton = document.getElementById('helper-button');
+helperButton.addEventListener('click', function() {
+    var id = getIDFromURL(); // id 값 가져오기
+    showEnrollmentPlans(id);
+});
+
+function sendEnrollmentRequest(studentId, subjectId) {
+
+    var requestData = {
+        "student_id": parseInt(studentId),
+        "subject_id": parseInt(subjectId)
+  };
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', 'http://localhost:8085/orders', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === XMLHttpRequest.DONE) {
+      if (xhr.status === 200) {
+        var response = JSON.parse(xhr.responseText);
+        // 수강신청 성공 처리
+        console.log(response);
+      } else {
+        // 수강신청 실패 처리
+        console.error('수강신청 실패');
+      }
+    }
+  };
+  console.log(requestData); // 출력
+
+  xhr.send(JSON.stringify(requestData));
+}
+
+
+
+// 수강 희망 과목 표시 함수
+// 수강 희망 과목 표시 함수
+function displayEnrollmentPlans(enrollmentPlans) {
+  var planTable = document.getElementById('plan-table');
+  planTable.innerHTML = '';
+
+  if (!Array.isArray(enrollmentPlans)) {
+    var errorMessage = document.createElement('p');
+    errorMessage.textContent = '수강 희망 과목 정보를 가져오지 못했습니다.';
+    planTable.appendChild(errorMessage);
+    return;
+  }
+
+  var table = document.createElement('table');
+  table.className = 'enrollment-plans-table';
+  table.style.borderCollapse = 'collapse'; // Collapse borders
+
+  var tableHeader = document.createElement('thead');
+  var headerRow = document.createElement('tr');
+  var headers = ['ID', 'Student ID', 'Subject ID', ''];
+
+  headers.forEach(function(headerText) {
+    var headerCell = document.createElement('th');
+    headerCell.textContent = headerText;
+    headerCell.style.border = '2px solid black'; // Add border to header cell
+    headerCell.style.padding = '8px'; // Add padding to the header cell
+    headerCell.style.textAlign = 'center'; // Center-align the header cell content
+    headerRow.appendChild(headerCell);
+  });
+
+  tableHeader.appendChild(headerRow);
+  table.appendChild(tableHeader);
+
+  var tableBody = document.createElement('tbody');
+
+  enrollmentPlans.forEach(function(plan) {
+    var row = document.createElement('tr');
+    var rowData = [plan.id, plan.studentId, plan.subjectId];
+
+    rowData.forEach(function(text) {
+      var cell = document.createElement('td');
+      cell.textContent = text;
+      cell.style.border = '1px solid black'; // Add border to cell
+      cell.style.padding = '6px'; // Add padding to the cell
+      cell.style.textAlign = 'center'; // Center-align the cell content
+      row.appendChild(cell);
+    });
+
+    // Create enrollment button
+    var enrollButtonCell = document.createElement('td');
+    var enrollButton = document.createElement('button');
+    enrollButton.textContent = '수강신청';
+    enrollButton.addEventListener('click', function() {
+      sendEnrollmentRequest(plan.studentId, plan.subjectId); // Send enrollment request on button click
+    });
+    enrollButtonCell.appendChild(enrollButton);
+    row.appendChild(enrollButtonCell);
+
+    tableBody.appendChild(row);
+  });
+
+  table.appendChild(tableBody);
+  planTable.appendChild(table);
+}
+var helperButton = document.getElementById('order-button');
+helperButton.addEventListener('click', function() {
+    var id = getIDFromURL(); // id 값 가져오기
+    searchOrder(id);
+});
+function searchOrder(id) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'http://localhost:8085/orders/' + id, true);
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      var orders = JSON.parse(xhr.responseText);
+      displayOrder(orders);
+    } else {
+      console.error(xhr.statusText);
+    }
+  };
+  xhr.onerror = function() {
+    console.error(xhr.statusText);
+  };
+  xhr.send(null);
+}
+
+function displayOrder(orders) {
+  var orderTable = document.createElement('table');
+  orderTable.className = 'order-table';
+  orderTable.style.borderCollapse = 'collapse';
+
+  // Create table header row
+  var tableHeader = document.createElement('thead');
+  var headerRow = document.createElement('tr');
+  var headers = ['ID', 'Student ID', 'Subject ID'];
+
+  headers.forEach(function (headerText) {
+    var headerCell = document.createElement('th');
+    headerCell.textContent = headerText;
+    headerCell.style.border = '2px solid black';
+    headerCell.style.padding = '8px';
+    headerCell.style.textAlign = 'center';
+    headerRow.appendChild(headerCell);
+  });
+
+  tableHeader.appendChild(headerRow);
+  orderTable.appendChild(tableHeader);
+
+  // Create table body rows
+  var tableBody = document.createElement('tbody');
+
+  orders.forEach(function (order) {
+    var row = document.createElement('tr');
+
+    var rowData = [order.id, order.student_id, order.subject_id];
+
+    rowData.forEach(function (text) {
+      var cell = document.createElement('td');
+      cell.textContent = text;
+      cell.style.border = '1px solid black';
+      cell.style.padding = '6px';
+      cell.style.textAlign = 'center';
+      row.appendChild(cell);
+    });
+
+    tableBody.appendChild(row);
+  });
+
+  orderTable.appendChild(tableBody);
+
+  var orderContainer = document.getElementById('order-table');
+  orderContainer.innerHTML = '';
+  orderContainer.appendChild(orderTable);
+}
+
+
+});
     </script>
 </body>
 </html>
-
-

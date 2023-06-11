@@ -48,6 +48,22 @@ func main() {
 			return
 		}
 
+		var count int
+		err = tx.QueryRow("SELECT COUNT(*) FROM enrollment_complete WHERE student_id = ? AND subject_id = ?", request.StudentID, request.SubjectID).Scan(&count)
+		if err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		if count > 0 {
+			tx.Rollback()
+			c.JSON(http.StatusOK, gin.H{"Success": "false",
+				"StudentId": request.StudentID,
+				"SubjectId": request.SubjectID})
+			return
+		}
+
 		// enrollment_order 테이블에서 수강정원(cap)과 현재신청인원(current) 확인
 		var cap, current int
 		err = tx.QueryRow("SELECT enrollment_cap, enrollment_current FROM enrollment_order WHERE subject_id = ?", request.SubjectID).Scan(&cap, &current)
@@ -94,6 +110,37 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"Success": "true",
 			"StudentId": request.StudentID,
 			"SubjectId": request.SubjectID})
+	})
+
+	// 수강신청 정보 조회 API 핸들러
+	router.GET("/orders/:id", func(c *gin.Context) {
+		studentID := c.Param("id")
+
+		// enrollment_complete 테이블에서 studentID에 해당하는 정보 조회
+		rows, err := db.Query("SELECT student_id, subject_id FROM enrollment_complete WHERE student_id = ?", studentID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		defer rows.Close()
+
+		// 조회 결과를 담을 슬라이스 생성
+		var enrollmentList []EnrollmentResponse
+
+		// 조회 결과를 슬라이스에 추가
+		for rows.Next() {
+			var enrollment EnrollmentResponse
+			err := rows.Scan(&enrollment.StudentID, &enrollment.SubjectID)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+			enrollment.Success = "true"
+			enrollmentList = append(enrollmentList, enrollment)
+		}
+
+		// 조회 결과를 JSON 형식으로 반환
+		c.JSON(http.StatusOK, enrollmentList)
 	})
 
 	// 서버 시작
